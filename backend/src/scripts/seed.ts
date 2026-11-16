@@ -14,6 +14,7 @@
 import { config } from "../config";
 import { pool } from "../db";
 import { recalculateAllClientsHealth } from "../modules/clients/healthScore";
+import { aiClient } from "../modules/assistant/aiClient";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const isoDay = (date: Date) => date.toISOString().slice(0, 10);
@@ -412,6 +413,16 @@ async function seed() {
         [result.clientId, score, daysAgo]
       );
     }
+  }
+
+  // O seed grava direto no banco, sem passar pelas rotas, então não dispara a reindexação
+  // automática do Assistente. Pede ao serviço de IA para reconstruir o índice agora; se ele
+  // não estiver no ar, o índice é montado quando ele subir.
+  try {
+    const { data } = await aiClient.post("/reindex", {}, { params: { full: true }, timeout: 120_000 });
+    console.log(`Índice do Assistente atualizado: ${data.chunks_indexed} trechos.`);
+  } catch {
+    console.log("Serviço de IA fora do ar: o índice do Assistente será montado quando ele subir.");
   }
 
   console.log("Seed concluído.");
