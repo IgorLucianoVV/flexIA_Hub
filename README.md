@@ -37,15 +37,19 @@ Para carregar os dados de demonstração (apaga os dados de negócio existentes 
 docker compose exec backend node dist/scripts/seed.js --force
 ```
 
-> **Limitação conhecida:** os Dockerfiles e o `docker-compose.yml` foram escritos e validados sintaticamente (`docker compose config`), mas **não foram construídos nem executados** no ambiente em que este código foi desenvolvido — ele bloqueia o acesso ao Docker Hub por política de rede. O que foi verificado fora do Docker: o build de produção do backend (`npm run build` + `node dist/...`), o build do frontend (`vite build`) e os três serviços rodando juntos. Faça um `docker compose up --build` de validação antes de depender disso.
-
 ### Opção B — local, sem Docker
 
-Pré-requisitos: Node 22, Python 3.13, PostgreSQL 16 com as extensões `pgvector` (pacote `postgresql-16-pgvector`), `unaccent` e `pg_trgm` (pacote `postgresql-contrib`).
+Pré-requisitos: Node 22, Python 3.13 e um PostgreSQL 16 com as extensões `pgvector`, `unaccent` e `pg_trgm`.
+
+O caminho mais simples para o banco é usar o do Docker mesmo rodando o resto fora dele: `docker compose up -d db`
+publica o PostgreSQL (já com pgvector) em `127.0.0.1:5433`. Os `.env.example` já apontam para lá — só troque
+`CHANGE_ME` pelo `POSTGRES_PASSWORD` do `.env` da raiz. Um PostgreSQL instalado na máquina (ex.: o instalador do
+Windows) normalmente **não** tem o pgvector e usa outra senha; se a API responder "Erro interno do servidor" no
+login, confira `GET /api/health/ready`, que mostra o erro de conexão com o banco.
 
 ```bash
 # 1. Banco
-sudo -u postgres psql -c "CREATE DATABASE flexia_hub;"
+docker compose up -d db   # ou, num PostgreSQL próprio: CREATE DATABASE flexia_hub;
 
 # 2. Backend
 cd backend

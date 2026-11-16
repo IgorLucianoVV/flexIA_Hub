@@ -14,6 +14,10 @@ services:
       POSTGRES_USER: flexia
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no arquivo .env}"
       POSTGRES_DB: flexia_hub
+    # Publicado só em 127.0.0.1 para rodar backend/ai-service fora do Docker (npm run dev).
+    # Porta 5433 para não colidir com um PostgreSQL instalado na máquina.
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
