@@ -1,0 +1,72 @@
+# FlexIA Hub — sobe a plataforma inteira com:  docker compose up --build
+#
+# Antes, copie .env.example para .env e preencha os segredos (o compose se recusa a subir
+# sem eles). Depois de subir, o Hub fica em http://localhost:8080.
+#
+# Só o frontend é publicado para fora. O banco, a API e o serviço de IA conversam entre si
+# numa rede interna: a API só é alcançada via /api do frontend, e o serviço de IA só pela API.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16   # PostgreSQL 16 com a extensão pgvector (RAG)
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flexia
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no arquivo .env}"
+      POSTGRES_DB: flexia_hub
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flexia -d flexia_hub"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: "postgresql://flexia:${POSTGRES_PASSWORD}@db:5432/flexia_hub"
+      JWT_SECRET: "${JWT_SECRET:?defina JWT_SECRET no arquivo .env}"
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_TOKEN: "${AI_SERVICE_TOKEN:?defina AI_SERVICE_TOKEN no arquivo .env}"
+      TRUST_PROXY: "true"            # o backend fica atrás do nginx do frontend
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      EXPOSE_RESET_TOKEN: ${EXPOSE_RESET_TOKEN:-false}
+      GITLAB_URL: ${GITLAB_URL:-}
+      GITLAB_TOKEN: ${GITLAB_TOKEN:-}
+      GITLAB_GROUP: ${GITLAB_GROUP:-}
+      CLICKUP_API_TOKEN: ${CLICKUP_API_TOKEN:-}
+      CLICKUP_TEAM_ID: ${CLICKUP_TEAM_ID:-}
+
+  ai-service:
+    build: ./ai-service
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy   # o backend aplica as migrações (o índice de RAG depende delas)
+    environment:
+      APP_ENV: production
+      PORT: 8000
+      DATABASE_URL: "postgresql://flexia:${POSTGRES_PASSWORD}@db:5432/flexia_hub"
+      SERVICE_TOKEN: "${AI_SERVICE_TOKEN}"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_ROUTER_MODEL: ${AI_ROUTER_MODEL:-claude-haiku-5-5}
+      AI_SYNTHESIS_MODEL: ${AI_SYNTHESIS_MODEL:-claude-sonnet-5-5}
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HUB_PORT:-8080}:8080"
+
+volumes:
+  db_data:
