@@ -62,6 +62,7 @@ npm run dev              # API em http://localhost:4000
 # 3. AI Service
 cd ../ai-service
 python3 -m venv venv && source venv/bin/activate
+# Windows (PowerShell): python -m venv venv; venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env     # mesmo DATABASE_URL; SERVICE_TOKEN = AI_SERVICE_TOKEN do backend
 python main.py           # http://localhost:8000
