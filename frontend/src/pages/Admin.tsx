@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import type { AdminUser, AssistantInsights, AuditEntry, ForumCategory, UserRole } from "../types";
 import { ROLE_LABELS } from "../types";
 import { formatDateTime, formatDay, timeAgo } from "../lib/format";
+import { IconThumbDown, IconThumbUp } from "../components/icons";
 
 const TABS = [
   { id: "usuarios", label: "Usuários" },
@@ -289,7 +290,7 @@ function AssistantTab() {
         <Stat
           label="Respostas avaliadas como úteis"
           value={rated > 0 ? `${Math.round((totals.positive / rated) * 100)}%` : "—"}
-          sub={rated > 0 ? `${totals.positive} 👍 · ${totals.negative} 👎` : "ainda sem avaliações"}
+          sub={rated > 0 ? `${totals.positive} úteis · ${totals.negative} não úteis` : "ainda sem avaliações"}
         />
         <Stat label="Tempo médio de resposta" value={totals.questions > 0 ? `${(totals.avg_duration_ms / 1000).toFixed(1)}s` : "—"} />
       </div>
@@ -332,8 +333,8 @@ function AssistantTab() {
                   <p className="text-xs text-gray-400">{r.user_name}</p>
                 </div>
                 <span className="text-xs text-gray-400 shrink-0 flex items-center gap-2">
-                  {r.feedback === 1 && <span title="Avaliada como útil">👍</span>}
-                  {r.feedback === -1 && <span title="Avaliada como não útil">👎</span>}
+                  {r.feedback === 1 && <IconThumbUp className="h-3.5 w-3.5 text-emerald-600" title="Avaliada como útil" />}
+                  {r.feedback === -1 && <IconThumbDown className="h-3.5 w-3.5 text-rose-600" title="Avaliada como não útil" />}
                   {timeAgo(r.created_at)}
                 </span>
               </li>

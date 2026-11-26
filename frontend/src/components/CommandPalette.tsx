@@ -3,6 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { SearchResult } from "../types";
 import { KNOWLEDGE_TYPE_LABELS } from "../lib/format";
+import {
+  IconActivation,
+  IconCatalog,
+  IconClients,
+  IconDocument,
+  IconForum,
+  IconOverview,
+  IconSearch,
+  IconTask,
+  type IconProps,
+} from "./icons";
+
+type IconComponent = (props: IconProps) => React.JSX.Element;
 
 const TYPE_LABELS: Record<SearchResult["type"], string> = {
   cliente: "Clientes",
@@ -12,21 +25,21 @@ const TYPE_LABELS: Record<SearchResult["type"], string> = {
   documento: "Documentos",
   tarefa: "Tasks do ClickUp",
 };
-const TYPE_ICONS: Record<SearchResult["type"], string> = {
-  cliente: "🧭",
-  catalogo: "📚",
-  ativacao: "🚀",
-  forum: "💬",
-  documento: "📄",
-  tarefa: "✅",
+const TYPE_ICONS: Record<SearchResult["type"], IconComponent> = {
+  cliente: IconClients,
+  catalogo: IconCatalog,
+  ativacao: IconActivation,
+  forum: IconForum,
+  documento: IconDocument,
+  tarefa: IconTask,
 };
 
 const PAGES = [
-  { title: "Visão geral", path: "/" },
-  { title: "Catálogo de Conhecimento", path: "/catalogo" },
-  { title: "Ativação", path: "/ativacao" },
-  { title: "Clientes — Visão 360", path: "/clientes" },
-  { title: "Fórum", path: "/forum" },
+  { title: "Visão geral", path: "/", icon: IconOverview },
+  { title: "Catálogo de Conhecimento", path: "/catalogo", icon: IconCatalog },
+  { title: "Ativação", path: "/ativacao", icon: IconActivation },
+  { title: "Clientes — Visão 360", path: "/clientes", icon: IconClients },
+  { title: "Fórum", path: "/forum", icon: IconForum },
 ];
 
 /**
@@ -80,7 +93,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   // Lista plana (na ordem em que aparece na tela) para a navegação por teclado.
   const entries = useMemo(() => {
     if (query.trim().length < 2) {
-      return PAGES.map((p) => ({ key: p.path, title: p.title, subtitle: null as string | null, path: p.path, group: "Ir para", icon: "→" }));
+      return PAGES.map((p) => ({ key: p.path, title: p.title, subtitle: null as string | null, path: p.path, group: "Ir para", icon: p.icon }));
     }
     return results.map((r) => ({
       key: `${r.type}-${r.id}`,
@@ -126,7 +139,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         onKeyDown={onKeyDown}
       >
         <div className="flex items-center gap-2 px-4 border-b border-gray-100">
-          <span className="text-gray-400" aria-hidden="true">🔎</span>
+          <IconSearch className="h-4 w-4 text-gray-400" />
           <input
             ref={inputRef}
             value={query}
@@ -160,7 +173,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                     index === active ? "bg-indigo-50 text-indigo-900" : "text-gray-700"
                   }`}
                 >
-                  <span aria-hidden="true">{entry.icon}</span>
+                  <entry.icon className={`h-4 w-4 ${index === active ? "text-indigo-700" : "text-gray-400"}`} />
                   <span className="truncate font-medium">{entry.title}</span>
                   {entry.subtitle && <span className="truncate text-xs text-gray-400">{entry.subtitle}</span>}
                 </button>

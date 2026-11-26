@@ -5,6 +5,7 @@ import type { DashboardSummary } from "../types";
 import { HealthPill } from "../components/HealthPill";
 import { ProgressBar } from "../components/ProgressBar";
 import { dueLabel, formatDay } from "../lib/format";
+import { IconAlert } from "../components/icons";
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -115,7 +116,8 @@ export function Dashboard() {
                   </div>
                   <ProgressBar pct={p.progressPct} size="sm" />
                   <p className={`text-[11px] mt-1 ${p.is_overdue ? "text-rose-700 font-medium" : "text-gray-400"}`}>
-                    {p.target_date ? `${p.is_overdue ? "⚠ Atrasado — prazo era" : "Prazo:"} ${formatDay(p.target_date)}` : "Sem prazo definido"}
+                    {p.is_overdue && <IconAlert className="inline h-3 w-3 -mt-0.5 mr-1" />}
+                    {p.target_date ? `${p.is_overdue ? "Atrasado — prazo era" : "Prazo:"} ${formatDay(p.target_date)}` : "Sem prazo definido"}
                   </p>
                 </Link>
               ))}
@@ -139,7 +141,7 @@ export function Dashboard() {
                     </p>
                   </div>
                   <span className={`text-xs shrink-0 ${a.is_overdue ? "text-rose-700 font-medium" : "text-gray-500"}`}>
-                    {a.is_overdue ? "⚠ " : ""}
+                    {a.is_overdue && <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />}
                     {dueLabel(a.due_date)}
                   </span>
                 </li>
@@ -179,7 +181,8 @@ function StatCard({
     <Link to={to} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition-colors">
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-2xl font-semibold mt-1">{value}</p>
-      {sub && <p className={`text-xs mt-0.5 ${attention ? "text-rose-700 font-medium" : "text-gray-400"}`}>{attention ? "⚠ " : ""}{sub}</p>}
+      {sub && <p className={`text-xs mt-0.5 ${attention ? "text-rose-700 font-medium" : "text-gray-400"}`}>{attention && <IconAlert className="inline h-3 w-3 -mt-0.5 mr-1" />}
+          {sub}</p>}
     </Link>
   );
 }

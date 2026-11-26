@@ -8,6 +8,7 @@ import { HealthTrend } from "../components/HealthTrend";
 import { Modal } from "../components/Modal";
 import { ProgressBar } from "../components/ProgressBar";
 import { formatDay } from "../lib/format";
+import { IconAlert } from "../components/icons";
 
 const TASKS_PAGE_SIZE = 20;
 const SEVERITY_LABELS: Record<string, string> = { baixa: "Baixa", media: "Média", alta: "Alta", critica: "Crítica" };
@@ -112,7 +113,9 @@ export function Cliente360Page() {
           <p className="text-xs text-gray-400">Health score</p>
           <p className="text-3xl font-semibold">{client.health_score ?? "—"}</p>
           {client.health_score != null && client.health_score < 70 && (
-            <p className="text-xs text-rose-700 font-medium">⚠ Cliente em risco</p>
+            <p className="text-xs text-rose-700 font-medium flex items-center gap-1">
+              <IconAlert className="h-3.5 w-3.5" /> Cliente em risco
+            </p>
           )}
         </div>
       </header>

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../AuthContext";
+import { LogoMark } from "../components/icons";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -33,9 +34,7 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f7f7fb] px-4">
       <div className="w-full max-w-sm bg-white rounded-xl border border-gray-200 p-7">
         <div className="flex items-center gap-2 mb-6">
-          <div className="h-9 w-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-semibold text-sm">
-            FX
-          </div>
+          <LogoMark className="h-9 w-9" />
           <div>
             <p className="font-semibold text-sm leading-tight">FlexIA Hub</p>
             <p className="text-xs text-gray-400 leading-tight">Squad FlexIA</p>

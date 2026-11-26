@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { AppNotification } from "../types";
 import { timeAgo } from "../lib/format";
+import { IconBell } from "./icons";
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -81,7 +82,7 @@ export function NotificationBell() {
         aria-expanded={open}
         className="relative h-9 w-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center"
       >
-        <span aria-hidden="true">🔔</span>
+        <IconBell className="h-[18px] w-[18px]" />
         {unread > 0 && (
           <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-semibold flex items-center justify-center">
             {unread > 99 ? "99+" : unread}

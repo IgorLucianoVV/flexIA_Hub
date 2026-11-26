@@ -6,14 +6,25 @@ import { ROLE_LABELS } from "../types";
 import { AssistantPanel } from "./AssistantPanel";
 import { CommandPalette } from "./CommandPalette";
 import { ErrorBoundary } from "./ErrorBoundary";
+import {
+  IconActivation,
+  IconAdmin,
+  IconCatalog,
+  IconClients,
+  IconForum,
+  IconOverview,
+  IconSearch,
+  IconSpark,
+  LogoMark,
+} from "./icons";
 import { NotificationBell } from "./NotificationBell";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Visão geral", icon: "🏠", end: true },
-  { to: "/catalogo", label: "Catálogo de Conhecimento", icon: "📚" },
-  { to: "/ativacao", label: "Ativação", icon: "🚀" },
-  { to: "/clientes", label: "Clientes — Visão 360", icon: "🧭" },
-  { to: "/forum", label: "Fórum", icon: "💬" },
+  { to: "/", label: "Visão geral", icon: IconOverview, end: true },
+  { to: "/catalogo", label: "Catálogo de Conhecimento", icon: IconCatalog },
+  { to: "/ativacao", label: "Ativação", icon: IconActivation },
+  { to: "/clientes", label: "Clientes — Visão 360", icon: IconClients },
+  { to: "/forum", label: "Fórum", icon: IconForum },
 ];
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -44,16 +55,14 @@ export function Layout() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const navItems = user?.role === "admin" ? [...NAV_ITEMS, { to: "/admin", label: "Administração", icon: "⚙️" }] : NAV_ITEMS;
+  const navItems = user?.role === "admin" ? [...NAV_ITEMS, { to: "/admin", label: "Administração", icon: IconAdmin }] : NAV_ITEMS;
 
   return (
     <div className="min-h-screen flex bg-[#f7f7fb] text-gray-900">
       <aside className="w-64 shrink-0 bg-white border-r border-gray-200 flex flex-col sticky top-0 h-screen">
         <div className="px-5 py-5 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-semibold text-sm">
-              FX
-            </div>
+            <LogoMark className="h-8 w-8" />
             <div>
               <p className="font-semibold text-sm leading-tight">FlexIA Hub</p>
               <p className="text-xs text-gray-400 leading-tight">Squad FlexIA</p>
@@ -72,7 +81,7 @@ export function Layout() {
                 }`
               }
             >
-              <span className="text-base leading-none">{item.icon}</span>
+              <item.icon className="h-[18px] w-[18px]" />
               {item.label}
             </NavLink>
           ))}
@@ -103,7 +112,7 @@ export function Layout() {
             onClick={() => setPaletteOpen(true)}
             className="flex-1 max-w-md flex items-center gap-2 px-3 h-9 rounded-lg border border-gray-200 bg-white text-sm text-gray-400 hover:border-gray-300"
           >
-            <span aria-hidden="true">🔎</span>
+            <IconSearch className="h-4 w-4 text-gray-400" />
             <span className="flex-1 text-left">Buscar no Hub…</span>
             <kbd className="text-[10px] border border-gray-200 rounded px-1.5 py-0.5">{isMac ? "⌘K" : "Ctrl K"}</kbd>
           </button>
@@ -111,9 +120,9 @@ export function Layout() {
           <NotificationBell />
           <button
             onClick={() => setAssistantOpen(true)}
-            className="h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 flex items-center gap-1.5"
+            className="h-9 px-3.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 flex items-center gap-1.5 [--icon-accent:#c7d2fe]"
           >
-            <span aria-hidden="true">✨</span> Assistente de IA
+            <IconSpark className="h-4 w-4" /> Assistente de IA
           </button>
         </header>
 

@@ -7,6 +7,7 @@ import { Badge } from "../components/Badge";
 import { Modal } from "../components/Modal";
 import { ProgressBar } from "../components/ProgressBar";
 import { dueLabel, formatDay } from "../lib/format";
+import { IconAlert, IconChevronDown } from "../components/icons";
 
 const PAGE_SIZE = 10;
 const STATUS_FILTERS = [
@@ -181,9 +182,9 @@ export function Ativacao() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {project.is_overdue && project.status !== "atrasado" && <Badge value="atrasado" label="⚠ prazo vencido" />}
+                      {project.is_overdue && project.status !== "atrasado" && <Badge value="atrasado" label="prazo vencido" alert />}
                       <Badge value={project.status} />
-                      <span className="text-gray-300 text-xs">{isOpen ? "▲" : "▼"}</span>
+                      <IconChevronDown className={`h-4 w-4 text-gray-300 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </div>
                   </div>
                   <div>
@@ -191,7 +192,11 @@ export function Ativacao() {
                       <span>
                         {project.doneArtifacts} de {project.totalArtifacts} artefatos entregues
                         {project.overdueArtifacts ? (
-                          <span className="text-rose-700 font-medium"> · ⚠ {project.overdueArtifacts} vencido(s)</span>
+                          <span className="text-rose-700 font-medium">
+                            {" · "}
+                            <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />
+                            {project.overdueArtifacts} vencido(s)
+                          </span>
                         ) : null}
                       </span>
                       <span className="font-semibold text-gray-700">
@@ -229,7 +234,7 @@ export function Ativacao() {
                               <span className="ml-auto flex items-center gap-3 text-xs text-gray-400 shrink-0">
                                 {art.due_date && art.status !== "concluido" && (
                                   <span className={art.is_overdue ? "text-rose-700 font-medium" : ""} title={formatDay(art.due_date)}>
-                                    {art.is_overdue ? "⚠ " : ""}
+                                    {art.is_overdue && <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />}
                                     {dueLabel(art.due_date)}
                                   </span>
                                 )}

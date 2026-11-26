@@ -2,6 +2,8 @@
 
 :root {
   color-scheme: light;
+  /* Cor do "nó" de destaque dos ícones (src/components/icons.tsx). */
+  --icon-accent: #6366f1;
 }
 
 body {

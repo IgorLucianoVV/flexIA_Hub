@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import type { AssistantCitation } from "../types";
 import { AnswerText } from "./AnswerText";
+import { IconSpark, IconSync, IconThumbDown, IconThumbUp } from "./icons";
 
 interface Exchange {
   /** Id da interação gravada no servidor (permite avaliar a resposta). */
@@ -158,7 +159,9 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
       >
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="font-semibold text-sm flex items-center gap-1.5">✨ Assistente de IA</h2>
+            <h2 className="font-semibold text-sm flex items-center gap-1.5">
+              <IconSpark className="h-4 w-4 text-indigo-600" /> Assistente de IA
+            </h2>
             <p className="text-xs text-gray-400">Busca híbrida (RAG) sobre toda a base do Hub</p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -166,9 +169,10 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
               onClick={reindex}
               disabled={reindexing}
               title="O índice se atualiza sozinho quando o conteúdo muda; use para forçar uma sincronização agora"
-              className="text-xs text-gray-400 hover:text-indigo-600 disabled:opacity-50 px-1.5 py-1 rounded"
+              className="text-xs text-gray-400 hover:text-indigo-600 disabled:opacity-50 px-1.5 py-1 rounded flex items-center gap-1"
             >
-              {reindexing ? "Sincronizando…" : "↻ Sincronizar índice"}
+              <IconSync className={`h-3.5 w-3.5 ${reindexing ? "animate-spin" : ""}`} />
+              {reindexing ? "Sincronizando…" : "Sincronizar índice"}
             </button>
             <button onClick={onClose} aria-label="Fechar" className="text-gray-400 hover:text-gray-700 text-lg leading-none px-1">
               ×
@@ -237,21 +241,21 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
                         onClick={() => sendFeedback(i, 1)}
                         aria-pressed={ex.feedback === 1}
                         aria-label="Resposta ajudou"
-                        className={`px-1.5 py-0.5 rounded border ${
+                        className={`px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
                           ex.feedback === 1 ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-transparent hover:bg-gray-50"
                         }`}
                       >
-                        👍 Sim
+                        <IconThumbUp className="h-3.5 w-3.5" /> Sim
                       </button>
                       <button
                         onClick={() => sendFeedback(i, -1)}
                         aria-pressed={ex.feedback === -1}
                         aria-label="Resposta não ajudou"
-                        className={`px-1.5 py-0.5 rounded border ${
+                        className={`px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
                           ex.feedback === -1 ? "border-rose-300 bg-rose-50 text-rose-700" : "border-transparent hover:bg-gray-50"
                         }`}
                       >
-                        👎 Não
+                        <IconThumbDown className="h-3.5 w-3.5" /> Não
                       </button>
                     </div>
                   )}

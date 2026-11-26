@@ -7,6 +7,7 @@ import { Badge } from "../components/Badge";
 import { Modal } from "../components/Modal";
 import { ScoreBadge } from "../components/ScoreBadge";
 import { KNOWLEDGE_STATUS_LABELS, KNOWLEDGE_TYPE_LABELS, formatDay } from "../lib/format";
+import { IconAlert } from "../components/icons";
 
 const PAGE_SIZE = 12;
 
@@ -152,7 +153,8 @@ export function Catalogo() {
                   <ScoreBadge scorecard={item.scorecard} />
                   {item.scorecard.stale && (
                     <span className="text-[11px] text-amber-800" title="Sem revisão ou sincronização nos últimos 180 dias">
-                      ⚠ {item.scorecard.daysSinceReview === null ? "nunca revisado" : `revisado há ${item.scorecard.daysSinceReview} dias`}
+                      <IconAlert className="inline h-3 w-3 -mt-0.5 mr-1" />
+                      {item.scorecard.daysSinceReview === null ? "nunca revisado" : `revisado há ${item.scorecard.daysSinceReview} dias`}
                     </span>
                   )}
                 </div>
@@ -163,7 +165,14 @@ export function Catalogo() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400 w-full">
-                  <span>{item.owner_team ?? "⚠ Sem time definido"}</span>
+                  <span>
+                    {item.owner_team ?? (
+                      <>
+                        <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />
+                        Sem time definido
+                      </>
+                    )}
+                  </span>
                   <span>
                     {item.depends_on_count ? `depende de ${item.depends_on_count}` : ""}
                     {item.depends_on_count && item.dependents_count ? " · " : ""}
@@ -365,7 +374,11 @@ function ItemDetailModal({
                   <li key={d.relation_id} className="flex items-center justify-between gap-2 text-sm">
                     <button onClick={() => onOpenItem(d.id)} className="text-left hover:text-indigo-600 truncate">
                       {d.name}
-                      {d.status === "deprecado" && <span className="text-amber-800 text-xs"> ⚠ descontinuado</span>}
+                      {d.status === "deprecado" && <span className="text-amber-800 text-xs">
+                          {" "}
+                          <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />
+                          descontinuado
+                        </span>}
                     </button>
                     {canEdit && (
                       <button
@@ -422,7 +435,9 @@ function ItemDetailModal({
               </ul>
             )}
             {item.status === "deprecado" && dependents.length > 0 && (
-              <p className="text-xs text-amber-800 mt-2">⚠ Estes itens ainda dependem de um item descontinuado.</p>
+              <p className="text-xs text-amber-800 mt-2">
+                <IconAlert className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />
+                Estes itens ainda dependem de um item descontinuado.</p>
             )}
           </section>
         </div>

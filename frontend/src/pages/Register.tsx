@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useAuth } from "../AuthContext";
 import { ROLE_LABELS } from "../types";
 import type { UserRole } from "../types";
+import { LogoMark } from "../components/icons";
 
 // "Admin" não aparece aqui de propósito: esse papel só é concedido por outro administrador.
 const ROLE_OPTIONS = (Object.entries(ROLE_LABELS) as [UserRole, string][]).filter(([role]) => role !== "admin");
@@ -37,9 +38,7 @@ export function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f7f7fb] px-4">
       <div className="w-full max-w-sm bg-white rounded-xl border border-gray-200 p-7">
         <div className="flex items-center gap-2 mb-6">
-          <div className="h-9 w-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-semibold text-sm">
-            FX
-          </div>
+          <LogoMark className="h-9 w-9" />
           <div>
             <p className="font-semibold text-sm leading-tight">FlexIA Hub</p>
             <p className="text-xs text-gray-400 leading-tight">Squad FlexIA</p>

@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext";
 import type { Client, ForumCategory, ForumThread, KnowledgeItem } from "../types";
 import { ROLE_LABELS } from "../types";
 import { timeAgo } from "../lib/format";
+import { IconPin } from "../components/icons";
 
 const PAGE_SIZE = 15;
 
@@ -113,7 +114,7 @@ export function ForumPage() {
               <Link to={`/forum/${t.id}`} className="flex items-start justify-between gap-4 px-5 py-4 hover:bg-gray-50">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {t.pinned && <span className="text-xs">📌</span>}
+                    {t.pinned && <IconPin className="h-3.5 w-3.5 text-indigo-600" title="Fixado" />}
                     <span className="font-medium text-sm truncate">{t.title}</span>
                     {t.accepted_reply_id && (
                       <span className="text-[11px] text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">✓ Resolvido</span>
