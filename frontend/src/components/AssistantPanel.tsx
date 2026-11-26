@@ -26,6 +26,7 @@ const SUGGESTIONS = [
 const TYPE_LABELS: Record<string, string> = {
   cliente: "Cliente",
   catalogo: "Catálogo",
+  anexo: "Documentação",
   ativacao: "Ativação",
   forum: "Fórum",
   documento: "Documento",

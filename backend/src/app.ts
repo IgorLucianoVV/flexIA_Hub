@@ -69,7 +69,12 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "200kb" }));
+// JSON de até 200 KB em toda a API; os anexos do catálogo (documentação, diagramas, árvores de
+// diálogo exportadas de bots) aceitam até 2 MB. Uploads de arquivo usam corpo binário próprio.
+const jsonDefault = express.json({ limit: "200kb" });
+const jsonLarge = express.json({ limit: "2mb" });
+const LARGE_JSON_ROUTES = /^\/api\/knowledge\/(dialog-tree\/preview|[^/]+\/attachments(\/[^/]+)?)$/;
+app.use((req, res, next) => (LARGE_JSON_ROUTES.test(req.path) ? jsonLarge : jsonDefault)(req, res, next));
 
 // Liveness: o processo está de pé? (não toca no banco — é o que um orquestrador usa para
 // decidir se reinicia o contêiner).

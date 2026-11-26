@@ -71,7 +71,7 @@ def clean_tables(database):
             """TRUNCATE TABLE rag_chunks, rag_index_state, forum_replies, forum_threads, forum_categories,
                    client_metrics, client_alerts, client_documents, clickup_task_cache,
                    activation_artifacts, activation_phases, activation_projects,
-                   knowledge_relations, knowledge_items, clients, users
+                   knowledge_attachments, knowledge_relations, knowledge_items, clients, users
                RESTART IDENTITY CASCADE"""
         )
     rag._model_cache.update(fitted_at=None, bundle=None)

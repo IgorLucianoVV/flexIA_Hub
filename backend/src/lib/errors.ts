@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import { ZodError } from "zod";
+import { config } from "../config";
 import { logger } from "./logger";
 
 /** Erro com status HTTP. Lançar um destes em qualquer rota vira a resposta JSON correspondente. */
@@ -62,7 +63,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return res.status(400).json({ error: "JSON inválido no corpo da requisição" });
   }
   if (err?.type === "entity.too.large") {
-    return res.status(413).json({ error: "Corpo da requisição grande demais" });
+    const isUpload = req.originalUrl.split("?")[0].endsWith("/attachments/file");
+    return res.status(413).json({
+      error: isUpload
+        ? `Arquivo maior que o limite de ${Math.round(config.maxUploadBytes / 1024 / 1024)} MB`
+        : "Corpo da requisição grande demais",
+    });
   }
 
   const pgError = typeof err?.code === "string" ? PG_CLIENT_ERRORS[err.code] : undefined;

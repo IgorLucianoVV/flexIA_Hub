@@ -79,6 +79,7 @@ Contas de demonstração criadas pelo seed (senha `demo1234`): `demo@flexia.loca
 
 - **Visão geral** — indicadores calculados no banco: clientes em risco, alertas, projetos atrasados, entregas da semana, governança do catálogo.
 - **Catálogo de Conhecimento** — agentes, chatbots, instructions, integrações. Cada item tem um **scorecard de governança** (dono, descrição, tags, repositório, revisão recente, ciclo de vida), **dependências** entre itens (com proteção contra ciclos) e ciclo de vida com descontinuação e substituto.
+  Cada item tem a sua página (`/catalogo/:id`) com **documentação e anexos** (ver abaixo).
 - **Ativação** — projetos com fases e artefatos, criados a partir de **templates** (já nascem com prazos calculados). O status das fases e do projeto é derivado dos artefatos; prazos vencidos aparecem sozinhos.
 - **Clientes — Visão 360** — tasks do ClickUp, documentos, métricas, alertas (manuais e automáticos), **composição do health score** ("por que 49?") e **gráfico de evolução**.
 - **Fórum** — tópicos vinculáveis a cliente/item do catálogo, respostas, **resposta marcada como solução**.
@@ -86,6 +87,23 @@ Contas de demonstração criadas pelo seed (senha `demo1234`): `demo@flexia.loca
 - **Busca global (Ctrl+K)** — ir direto a um cliente, item, projeto, tópico, documento ou task pelo nome, ignorando acentos.
 - **Assistente de IA** (canto superior direito) — responde perguntas com base em toda a plataforma, guarda o histórico da conversa e aceita avaliação 👍/👎 de cada resposta.
 - **Administração** (só admin) — usuários e papéis, log de auditoria, uso do Assistente, categorias do fórum.
+
+## Documentação e anexos do catálogo
+
+Na página de cada item, a aba **Documentação e anexos** reúne o material que explica o código, a arquitetura ou o fluxo daquele item, no estilo "docs-like-code" de portais internos como o Backstage TechDocs:
+
+| Tipo | O que é | Como aparece |
+|---|---|---|
+| Documentação | Markdown escrito no Hub (README, decisões, runbook), com tabelas, listas de tarefas e blocos de código | Formatada; um bloco ` ```mermaid ` vira diagrama. Editor com pré-visualização ao lado e modelo inicial. |
+| Diagrama | Código [Mermaid](https://mermaid.js.org): flowchart, sequência, estados, ER, C4… | Desenhado na tela, com zoom e "ver código". Modelos de arquitetura, sequência, estados e entidades. |
+| Árvore de diálogo | Fluxo de um chatbot, importado do JSON exportado da ferramenta do bot | **Navegar**: índice expansível a partir do nó inicial, busca (pelo nome, pelo texto ou pela opção que leva ao nó) e painel com o que o bot diz, de onde se chega e para onde vai; nós fora do fluxo são apontados. **Mapa**: o grafo inteiro desenhado (até 120 nós). |
+| Arquivo | PDF, imagens, texto, JSON, YAML, CSV, planilhas, Word, PowerPoint, draw.io, zip — até 25 MB (`MAX_UPLOAD_MB`) | Imagem e PDF abertos na tela, texto e JSON formatados, o resto para baixar. Um `.json` pode virar árvore de diálogo com um clique. |
+| Link | Figma, Drive, Confluence, painel | Cartão com o link e uma descrição. |
+
+- **Árvores de diálogo em vários formatos.** O backend converte o JSON para um grafo `{root, nodes, edges}` (`backend/src/modules/knowledge/dialogTree.ts`). Aceita esse próprio formato, árvores aninhadas (`options`/`children`/`choices`/`buttons` com `next`) e listas de nós com transições por id (`to`/`target`/`goto`). O editor mostra como o Hub entendeu o fluxo, com avisos, antes de salvar.
+- **O Assistente de IA usa esse material.** Documentação, diagramas, árvores (achatadas em "opção X leva a Y") e o texto extraído de PDFs e arquivos de texto entram no índice RAG, divididos em trechos de ~1.200 caracteres. A citação abre o anexo exato (`/catalogo/:id?anexo=…`).
+- **Arquivos** ficam em disco (`UPLOADS_DIR`; no Docker, o volume `uploads_data` — inclua no backup junto com o banco). O nome no disco é aleatório; o tipo é decidido pela extensão no servidor; o download sai com `Content-Security-Policy: sandbox` e SVG nunca abre na tela.
+- **Quem edita:** `admin` e `dev` (os mesmos que mantêm o catálogo). Leitura: qualquer usuário logado. Toda alteração vai para a auditoria.
 
 ## Sessão e segurança
 
@@ -109,7 +127,7 @@ Papéis: `dev`, `analista_suporte`, `analista_ativacao`, `admin`. Leitura: qualq
 | Clientes | Abrir/resolver alerta, anexar documento | `admin`, `analista_ativacao`, `analista_suporte` |
 | Ativação | Criar/editar/apagar projeto, fase, artefato, template | `admin`, `analista_ativacao` |
 | Ativação | Atualizar um artefato (status, prazo, responsável) | `admin`, `analista_ativacao`, `dev` |
-| Catálogo | Cadastrar, editar, revisar, dependências | `admin`, `dev` |
+| Catálogo | Cadastrar, editar, revisar, dependências, documentação e anexos | `admin`, `dev` |
 | Catálogo / ClickUp | Disparar sincronização | qualquer usuário logado |
 | Fórum | Criar tópico, responder | qualquer usuário logado |
 | Fórum | Editar/apagar | o autor, ou `admin` |
@@ -130,7 +148,7 @@ O `health_score` parte de 100 e desconta pontos por sinais que já existem no ba
 
 Detalhes em `ai-service/README.md`. Em resumo:
 
-- **Fontes indexadas:** clientes (com a composição do health score), catálogo (com dependências), projetos de ativação (com artefatos em aberto e prazos), fórum, documentos, alertas, métricas e tasks do ClickUp.
+- **Fontes indexadas:** clientes (com a composição do health score), catálogo (com dependências e toda a documentação, diagramas, árvores de diálogo e arquivos anexados), projetos de ativação (com artefatos em aberto e prazos), fórum, documentos, alertas, métricas e tasks do ClickUp.
 - **Busca híbrida:** similaridade vetorial (pgvector) + palavra-chave (full-text em português, sem acento, com peso por raridade do termo), fundidas por Reciprocal Rank Fusion. Vetor sozinho erra nomes próprios e siglas; palavra-chave sozinha erra sinônimos.
 - **Índice incremental e automático:** o backend avisa o serviço de IA quando o conteúdo muda e só o que mudou é reprocessado. O botão "Sincronizar índice" continua existindo para forçar.
 - **Serviço sem estado:** o modelo de embeddings mora no banco, não em arquivo local.
@@ -159,9 +177,9 @@ O schema é versionado em `backend/migrations/NNN_nome.sql`. `npm run migrate` a
 ## Testes
 
 ```bash
-cd backend    && npm test                 # 112 testes (vitest + supertest), banco flexia_hub_test
-cd ai-service && python -m pytest         # 18 testes (pytest), banco flexia_hub_ai_test
-cd frontend   && npm test                 # 17 testes (vitest + Testing Library)
+cd backend    && npm test                 # 125 testes (vitest + supertest), banco flexia_hub_test
+cd ai-service && python -m pytest         # 20 testes (pytest), banco flexia_hub_ai_test
+cd frontend   && npm test                 # 21 testes (vitest + Testing Library)
 ```
 
 Backend e serviço de IA testam contra um PostgreSQL de verdade, em bancos próprios criados automaticamente com as mesmas migrações de produção — os dados de desenvolvimento nunca são tocados. O `.gitlab-ci.yml` roda tipagem, lint e os três conjuntos de testes a cada alteração.

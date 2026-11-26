@@ -138,7 +138,7 @@ export function ForumThreadPage() {
               </Link>
             )}
             {thread.knowledge_item_name && (
-              <Link to={`/catalogo?item=${thread.knowledge_item_id}`} className="text-[11px] text-violet-600 bg-violet-50 rounded-full px-2 py-0.5 hover:underline">
+              <Link to={`/catalogo/${thread.knowledge_item_id}`} className="text-[11px] text-violet-600 bg-violet-50 rounded-full px-2 py-0.5 hover:underline">
                 {thread.knowledge_item_name}
               </Link>
             )}

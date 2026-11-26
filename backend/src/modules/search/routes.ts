@@ -83,7 +83,7 @@ searchRouter.get("/", async (req, res) => {
 
   const results: SearchResult[] = [
     ...clients.rows.map((r) => ({ type: "cliente" as const, ...r, path: `/clientes/${r.id}` })),
-    ...knowledge.rows.map((r) => ({ type: "catalogo" as const, ...r, path: `/catalogo?item=${r.id}` })),
+    ...knowledge.rows.map((r) => ({ type: "catalogo" as const, ...r, path: `/catalogo/${r.id}` })),
     ...projects.rows.map((r) => ({ type: "ativacao" as const, ...r, path: `/ativacao?projeto=${r.id}` })),
     ...threads.rows.map((r) => ({ type: "forum" as const, ...r, path: `/forum/${r.id}` })),
     ...documents.rows.map(({ client_id, ...r }) => ({ type: "documento" as const, ...r, path: `/clientes/${client_id}` })),

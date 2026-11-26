@@ -38,7 +38,7 @@ ALL_SOURCES = ["clientes", "catalogo", "ativacao", "forum"]
 # `source_type` dos chunks indexados em `rag_chunks` (ver rag.py#collect_chunks).
 SOURCE_TYPE_MAP = {
     "clientes": ["cliente", "documento", "alerta", "metrica", "tarefa"],
-    "catalogo": ["catalogo"],
+    "catalogo": ["catalogo", "anexo"],
     "ativacao": ["ativacao"],
     "forum": ["forum"],
 }
@@ -46,6 +46,7 @@ SOURCE_TYPE_MAP = {
 TYPE_LABELS = {
     "cliente": "Cliente",
     "catalogo": "Catálogo",
+    "anexo": "Documentação do catálogo",
     "ativacao": "Ativação",
     "forum": "Fórum",
     "documento": "Documentos",
@@ -118,7 +119,8 @@ def route_node(state: AgentState) -> AgentState:
         "Você organiza uma busca em uma base de conhecimento interna com 4 categorias: "
         "clientes (perfil, health score, CSM, documentos, alertas, métricas e tasks do ClickUp "
         "do cliente), catalogo (agentes de IA, chatbots, instructions, integrações e suas "
-        "dependências), ativacao (projetos de ativação de clientes, prazos e progresso), forum "
+        "dependências, com a documentação técnica, diagramas de arquitetura, árvores de diálogo e "
+        "arquivos anexados a cada item), ativacao (projetos de ativação de clientes, prazos e progresso), forum "
         "(discussões, feedback e notas do time). "
         "Dada a pergunta do usuário, responda APENAS com um JSON de uma lista das categorias "
         'relevantes, ex: {"sources": ["clientes", "forum"]}. Se a pergunta for genérica ou '

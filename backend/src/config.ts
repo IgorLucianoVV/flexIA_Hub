@@ -1,3 +1,4 @@
+import path from "path";
 import dotenv from "dotenv";
 import { z } from "zod";
 
@@ -42,6 +43,10 @@ const schema = z.object({
   AI_SERVICE_TOKEN: z.string().default(""),
   // Atraso (ms) entre a última alteração de conteúdo e o disparo da reindexação do RAG.
   REINDEX_DEBOUNCE_MS: z.coerce.number().int().nonnegative().default(5000),
+
+  // Arquivos anexados ao catálogo (PDF, imagens…). No Docker, é um volume próprio.
+  UPLOADS_DIR: z.string().default(""),
+  MAX_UPLOAD_MB: z.coerce.number().positive().max(200).default(25),
 
   GITLAB_URL: z.string().default(""),
   GITLAB_TOKEN: z.string().default(""),
@@ -91,6 +96,8 @@ function load() {
     aiServiceUrl: env.AI_SERVICE_URL.replace(/\/$/, ""),
     aiServiceToken: env.AI_SERVICE_TOKEN,
     reindexDebounceMs: env.REINDEX_DEBOUNCE_MS,
+    uploadsDir: path.resolve(env.UPLOADS_DIR || path.join(process.cwd(), "data", "uploads")),
+    maxUploadBytes: Math.round(env.MAX_UPLOAD_MB * 1024 * 1024),
     gitlab: { url: env.GITLAB_URL, token: env.GITLAB_TOKEN, group: env.GITLAB_GROUP },
     clickup: { apiToken: env.CLICKUP_API_TOKEN, teamId: env.CLICKUP_TEAM_ID },
   };

@@ -10,3 +10,58 @@ body {
   margin: 0;
   background-color: #f7f7fb;
 }
+
+/* Documentação do catálogo (MarkdownView): tipografia de leitura para Markdown. */
+.doc-prose {
+  color: #374151;
+  font-size: 0.925rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.doc-prose > * + * { margin-top: 0.9em; }
+.doc-prose h1, .doc-prose h2, .doc-prose h3, .doc-prose h4 {
+  color: #111827;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.6em;
+}
+.doc-prose > :first-child { margin-top: 0; }
+.doc-prose h1 { font-size: 1.5rem; }
+.doc-prose h2 { font-size: 1.2rem; padding-bottom: 0.3em; border-bottom: 1px solid #e5e7eb; }
+.doc-prose h3 { font-size: 1.05rem; }
+.doc-prose h4 { font-size: 0.95rem; }
+.doc-prose a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
+.doc-prose strong { color: #111827; font-weight: 600; }
+.doc-prose ul { list-style: disc; padding-left: 1.4em; }
+.doc-prose ol { list-style: decimal; padding-left: 1.4em; }
+.doc-prose li + li { margin-top: 0.25em; }
+.doc-prose li > input[type="checkbox"] { margin-right: 0.4em; accent-color: #4f46e5; }
+.doc-prose blockquote {
+  border-left: 3px solid #c7d2fe;
+  background: #f8fafc;
+  padding: 0.5em 1em;
+  color: #4b5563;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+.doc-prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: #f3f4f6;
+  border-radius: 0.3rem;
+  padding: 0.1em 0.35em;
+}
+.doc-prose pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.doc-prose pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.doc-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; display: block; overflow-x: auto; }
+.doc-prose th, .doc-prose td { border: 1px solid #e5e7eb; padding: 0.4em 0.7em; text-align: left; }
+.doc-prose th { background: #f9fafb; font-weight: 600; color: #111827; }
+.doc-prose hr { border: 0; border-top: 1px solid #e5e7eb; }
+.doc-prose img { max-width: 100%; border-radius: 0.5rem; }

@@ -52,13 +52,15 @@ Access token JWT curto + refresh token opaco com rotação e detecção de reuso
 
 Cada módulo em `src/modules/<nome>` tem suas rotas e, quando há regra de negócio que vale ser testada isoladamente, um arquivo próprio para ela (`clients/healthScore.ts`, `knowledge/scorecard.ts`). Regras derivadas são calculadas, não digitadas: health score, status de fase/projeto de ativação, scorecard do catálogo.
 
+**Anexos do catálogo (`knowledge/attachments.ts`, migração 012).** Uma tabela `knowledge_attachments` com `kind` (documento, diagrama, arvore_dialogo, arquivo, link). Markdown, código Mermaid e a árvore normalizada ficam em `content`; o texto extraído de arquivos fica em `extracted_text` (é o que o RAG indexa). Os bytes dos arquivos ficam fora do banco, em `lib/storage.ts` (disco hoje; trocar por S3/MinIO é reescrever só esse módulo). Upload é o corpo binário da requisição com o nome em `X-File-Name` — um arquivo por requisição, sem multipart nem dependência extra. A normalização de árvores de diálogo (`knowledge/dialogTree.ts`) é uma função pura, testada isoladamente, que aceita os formatos JSON mais comuns.
+
 ## Serviço de IA
 
 Grafo LangGraph de três nós: `route` (um modelo rápido escolhe as categorias) → `retrieve` (busca híbrida) → `synthesize` (um modelo mais capaz redige a resposta com as fontes).
 
 **Recuperação (`rag.py`)**
 
-1. Cada registro relevante vira um *chunk* de texto com um hash do conteúdo.
+1. Cada registro relevante vira um *chunk* de texto com um hash do conteúdo. Anexos longos do catálogo viram vários chunks (~1.200 caracteres, cortados em parágrafo).
 2. Cada chunk é indexado duas vezes: vetor denso (`embedding`, índice HNSW) e `tsvector` em português sem acento (índice GIN), com o título pesando mais que o corpo.
 3. A pergunta consulta as duas listas; os resultados são fundidos por **Reciprocal Rank Fusion**. Do lado de palavra-chave, cada termo pesa pela raridade (IDF) e termos presentes em quase todo o índice são ignorados.
 4. `sync_index()` compara hashes e reprocessa só o que mudou; o modelo é reajustado do zero quando o índice mudou demais.
@@ -72,6 +74,7 @@ Grafo LangGraph de três nós: `route` (um modelo rápido escolhe as categorias)
 - `api.ts` centraliza as chamadas e a renovação silenciosa da sessão (uma única renovação mesmo com várias requisições recebendo 401 ao mesmo tempo).
 - `ErrorBoundary` por rota: um erro de renderização não derruba o app inteiro.
 - A interface nunca depende só de cor para comunicar estado (ícone e texto acompanham).
+- A página do item do catálogo é carregada sob demanda (`React.lazy`), e o Mermaid só é baixado quando o primeiro diagrama aparece: o carregamento inicial do Hub não paga por eles. O Markdown é renderizado sem HTML cru (`react-markdown`) e o Mermaid roda com `securityLevel: "strict"`.
 - Estado de servidor é buscado por tela, sem cache compartilhado. Se a navegação começar a parecer lenta com mais dados, adotar uma camada de cache (TanStack Query) é o próximo passo natural.
 
 ## Decisões e seus custos
@@ -83,4 +86,5 @@ Grafo LangGraph de três nós: `route` (um modelo rápido escolhe as categorias)
 | JWT sem consulta ao banco | Autenticação barata por requisição | Revogação não é instantânea (até 1h) |
 | Tokens em `localStorage` | Sessão entre abas, implementação simples | Exposição a XSS; mitigada por token curto e refresh revogável |
 | Embeddings locais (LSA) | Zero credencial, zero rede | Qualidade semântica inferior à de um modelo neural |
+| Arquivos anexados em disco local (volume) | Simples, sem serviço novo | Uma réplica só do backend escreve no volume; para várias réplicas, trocar `lib/storage.ts` por S3/MinIO |
 | Um PostgreSQL para tudo | Uma coisa só para operar e fazer backup | Em escala muito maior, busca e vetores podem pedir serviços dedicados |

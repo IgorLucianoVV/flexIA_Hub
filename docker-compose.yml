@@ -40,6 +40,8 @@ services:
       AI_SERVICE_URL: http://ai-service:8000
       AI_SERVICE_TOKEN: "${AI_SERVICE_TOKEN:?defina AI_SERVICE_TOKEN no arquivo .env}"
       TRUST_PROXY: "true"            # o backend fica atrás do nginx do frontend
+      UPLOADS_DIR: /app/data/uploads # arquivos anexados ao catálogo (volume uploads_data)
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       EXPOSE_RESET_TOKEN: ${EXPOSE_RESET_TOKEN:-false}
       GITLAB_URL: ${GITLAB_URL:-}
@@ -47,6 +49,8 @@ services:
       GITLAB_GROUP: ${GITLAB_GROUP:-}
       CLICKUP_API_TOKEN: ${CLICKUP_API_TOKEN:-}
       CLICKUP_TEAM_ID: ${CLICKUP_TEAM_ID:-}
+    volumes:
+      - uploads_data:/app/data/uploads
 
   ai-service:
     build: ./ai-service
@@ -74,3 +78,4 @@ services:
 
 volumes:
   db_data:
+  uploads_data:   # arquivos anexados ao catálogo — entra no backup junto com o banco

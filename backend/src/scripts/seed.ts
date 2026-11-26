@@ -15,6 +15,7 @@ import { config } from "../config";
 import { pool } from "../db";
 import { recalculateAllClientsHealth } from "../modules/clients/healthScore";
 import { aiClient } from "../modules/assistant/aiClient";
+import { seedAttachments } from "./seedAttachments";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const isoDay = (date: Date) => date.toISOString().slice(0, 10);
@@ -181,6 +182,10 @@ async function seed() {
     knowledgeIds["Agente de Análise de Intenções (G4Flex)"],
     knowledgeIds["Conector Watson Assistant"],
   ]);
+
+  // Documentação, diagramas e árvores de diálogo de exemplo em alguns itens do catálogo.
+  const attachmentCount = await seedAttachments(knowledgeIds);
+  console.log(`Anexos de demonstração no catálogo: ${attachmentCount}.`);
 
   // Projetos de Ativação — demonstrativo, com fases e artefatos e progresso variado
   const activationTemplate = ["Kickoff", "Configuração e Integrações", "Testes e Homologação", "Go-live", "Pós-lançamento"];

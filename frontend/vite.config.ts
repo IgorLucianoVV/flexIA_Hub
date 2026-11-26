@@ -5,6 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // Os pedaços grandes são do Mermaid (layouts de diagrama), baixados só quando um diagrama
+    // aparece na tela — não entram no carregamento inicial do Hub.
+    chunkSizeWarningLimit: 1600,
+  },
   server: {
     host: true,
     port: 5173,

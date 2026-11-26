@@ -7,10 +7,13 @@ import { parsePagination, paginatedResponse } from "../../lib/pagination";
 import { escapeLike, id, optionalId, optionalText, param, parse, text } from "../../lib/validate";
 import { actorOf, AuthedRequest, requireAuth, requireRole } from "../auth/middleware";
 import { syncGitlabCatalog } from "../integrations/gitlab/client";
+import { attachmentsRouter } from "./attachments";
+import { DIALOG_TREE_MAX_NODES, InvalidTreeError, normalizeDialogTree } from "./dialogTree";
 import { computeScorecard } from "./scorecard";
 
 export const knowledgeRouter = Router();
 knowledgeRouter.use(requireAuth);
+knowledgeRouter.use("/:id/attachments", attachmentsRouter);
 
 const KNOWLEDGE_TYPES = ["agente_ia", "chatbot", "instruction", "arvore_dialogo", "integracao", "infraestrutura"] as const;
 const KNOWLEDGE_STATUSES = ["ativo", "em_revisao", "deprecado"] as const;
@@ -92,7 +95,8 @@ knowledgeRouter.get("/", async (req, res) => {
     pool.query(
       `SELECT k.*, c.name AS client_name,
           (SELECT COUNT(*) FROM knowledge_relations r WHERE r.from_id = k.id)::int AS depends_on_count,
-          (SELECT COUNT(*) FROM knowledge_relations r WHERE r.to_id = k.id)::int AS dependents_count
+          (SELECT COUNT(*) FROM knowledge_relations r WHERE r.to_id = k.id)::int AS dependents_count,
+          (SELECT COUNT(*) FROM knowledge_attachments a WHERE a.item_id = k.id)::int AS attachments_count
        FROM knowledge_items k LEFT JOIN clients c ON c.id = k.client_id
        ${where}
        ORDER BY k.updated_at DESC, k.name ASC
@@ -134,6 +138,19 @@ knowledgeRouter.get("/governance", async (_req, res) => {
   });
 });
 
+// POST /api/knowledge/dialog-tree/preview { content } — converte um JSON de árvore de diálogo
+// para o formato do Hub sem salvar (o editor mostra a árvore antes de o usuário confirmar).
+knowledgeRouter.post("/dialog-tree/preview", async (req, res) => {
+  const { content } = parse(z.object({ content: z.string().min(1, "Informe o JSON da árvore").max(1_500_000) }), req.body);
+  try {
+    const result = normalizeDialogTree(content);
+    res.json({ ...result, limits: { maxNodes: DIALOG_TREE_MAX_NODES } });
+  } catch (err) {
+    if (err instanceof InvalidTreeError) throw badRequest(err.message);
+    throw err;
+  }
+});
+
 // GET /api/knowledge/:id — item + scorecard + dependências (dos dois lados) + tópicos do fórum
 knowledgeRouter.get("/:id", async (req, res) => {
   const itemId = param(req.params.id);
@@ -147,7 +164,7 @@ knowledgeRouter.get("/:id", async (req, res) => {
   );
   if (!rows[0]) throw notFound("Item não encontrado");
 
-  const [dependsOn, dependents, threads] = await Promise.all([
+  const [dependsOn, dependents, threads, attachments] = await Promise.all([
     pool.query(
       `SELECT r.id AS relation_id, k.id, k.name, k.type, k.status
          FROM knowledge_relations r JOIN knowledge_items k ON k.id = r.to_id
@@ -165,6 +182,7 @@ knowledgeRouter.get("/:id", async (req, res) => {
          FROM forum_threads t WHERE t.knowledge_item_id = $1 ORDER BY t.created_at DESC LIMIT 10`,
       [itemId]
     ),
+    pool.query(`SELECT kind, COUNT(*)::int AS count FROM knowledge_attachments WHERE item_id = $1 GROUP BY kind`, [itemId]),
   ]);
 
   res.json({
@@ -172,6 +190,7 @@ knowledgeRouter.get("/:id", async (req, res) => {
     dependsOn: dependsOn.rows,
     dependents: dependents.rows,
     threads: threads.rows,
+    attachmentCounts: Object.fromEntries(attachments.rows.map((r) => [r.kind, r.count])),
   });
 });
 

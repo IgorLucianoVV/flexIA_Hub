@@ -37,8 +37,14 @@ em português sem acento (índice GIN; título com peso maior que o corpo). Uma 
    terceiro voto proporcional a quantos termos da pergunta estão no título do chunk.
 
 Fontes indexadas: clientes (com a composição do health score), catálogo (com dependências e
-descontinuação), projetos de ativação (com artefatos em aberto e prazos), tópicos e respostas
-do fórum, documentos, alertas abertos, métricas e tasks do ClickUp.
+descontinuação), anexos do catálogo (documentação em Markdown, diagramas Mermaid, árvores de
+diálogo achatadas em "opção X leva a Y", texto extraído de PDFs e arquivos de texto, links),
+projetos de ativação (com artefatos em aberto e prazos), tópicos e respostas do fórum,
+documentos, alertas abertos, métricas e tasks do ClickUp.
+
+Anexos longos viram vários chunks de ~1.200 caracteres (cortados em parágrafo, com 150 de
+sobreposição, até 60 por anexo), cada um com o nome do item e do anexo no começo — assim a
+busca acha o trecho certo de um runbook grande e a citação abre o anexo exato.
 
 Os embeddings são TF-IDF + SVD truncado, calculados localmente — sem API paga e sem baixar
 modelo. Para trocar por embeddings neurais, só `_fit` e `_transform` mudam.

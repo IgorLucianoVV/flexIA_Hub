@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
@@ -15,6 +16,9 @@ import { AdminPage } from "./pages/Admin";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AuthProvider } from "./AuthContext";
 import { RequireAuth } from "./RequireAuth";
+
+// A página do item traz o leitor de Markdown e o editor de anexos: só é baixada quando aberta.
+const CatalogoItemPage = lazy(() => import("./pages/CatalogoItem").then((m) => ({ default: m.CatalogoItemPage })));
 
 function NotFound() {
   return (
@@ -43,6 +47,14 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="catalogo" element={<Catalogo />} />
+            <Route
+              path="catalogo/:id"
+              element={
+                <Suspense fallback={<p className="p-8 text-sm text-gray-400">Carregando…</p>}>
+                  <CatalogoItemPage />
+                </Suspense>
+              }
+            />
             <Route path="ativacao" element={<Ativacao />} />
             <Route path="clientes" element={<Clientes />} />
             <Route path="clientes/:id" element={<Cliente360Page />} />

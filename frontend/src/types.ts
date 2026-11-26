@@ -61,7 +61,51 @@ export interface KnowledgeDetail {
   dependsOn: KnowledgeRelationItem[];
   dependents: KnowledgeRelationItem[];
   threads: { id: string; title: string; created_at: string; reply_count: number }[];
+  /** Quantos anexos o item tem, por tipo (documento, diagrama, arvore_dialogo, arquivo, link). */
+  attachmentCounts?: Partial<Record<AttachmentKind, number>>;
 }
+
+export type AttachmentKind = "documento" | "diagrama" | "arvore_dialogo" | "arquivo" | "link";
+
+/** Anexo de um item do catálogo, como vem na listagem (sem o conteúdo). */
+export interface KnowledgeAttachment {
+  id: string;
+  item_id: string;
+  kind: AttachmentKind;
+  title: string;
+  url: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  has_text: boolean;
+  updated_by_name: string | null;
+}
+
+export interface DialogNode {
+  id: string;
+  label: string;
+  text?: string;
+  type?: string;
+}
+export interface DialogEdge {
+  from: string;
+  to: string;
+  label?: string;
+}
+export interface DialogTree {
+  root: string | null;
+  nodes: DialogNode[];
+  edges: DialogEdge[];
+}
+
+/** Anexo com o conteúdo: Markdown/Mermaid como texto, árvore de diálogo já como objeto. */
+export type KnowledgeAttachmentDetail = KnowledgeAttachment & {
+  content: string | DialogTree | null;
+  text_preview: string | null;
+};
 
 export interface KnowledgeItem {
   id: string;
@@ -83,6 +127,7 @@ export interface KnowledgeItem {
   client_name?: string | null;
   depends_on_count?: number;
   dependents_count?: number;
+  attachments_count?: number;
   scorecard: Scorecard;
 }
 
@@ -257,7 +302,7 @@ export interface ForumReply {
 // Assistente de IA
 // ---------------------------------------------------------------------------
 export interface AssistantCitation {
-  type: "cliente" | "catalogo" | "ativacao" | "forum" | "documento" | "alerta" | "metrica" | "tarefa";
+  type: "cliente" | "catalogo" | "anexo" | "ativacao" | "forum" | "documento" | "alerta" | "metrica" | "tarefa";
   id: string;
   label: string;
   path: string;

@@ -1,4 +1,5 @@
 import dataclasses
+import json
 
 import db
 import rag
@@ -118,3 +119,51 @@ def test_modelo_fica_no_banco_e_sobrevive_a_reinicio(seed):
     # simula o processo reiniciando: cache em memória vazio, modelo recarregado do banco
     rag._model_cache.update(fitted_at=None, bundle=None)
     assert rag.search("pix")[0]["title"] == "Integração PIX Libercard"
+
+
+def test_split_text_corta_em_paragrafo_com_sobreposicao():
+    text = ("Primeiro parágrafo sobre o fluxo de recarga. " * 20) + "\n\n" + ("Segundo parágrafo sobre transbordo. " * 20)
+    parts = rag.split_text(text, size=1000, overlap=100)
+    assert len(parts) >= 2
+    assert all(len(p) <= 1000 for p in parts)
+    assert parts[0].endswith("recarga.")  # cortou no fim do parágrafo, não no meio de uma palavra
+    assert rag.split_text("") == []
+
+
+def test_anexos_do_catalogo_entram_no_indice_e_sao_achados(seed):
+    with db.connection() as conn, conn.cursor() as cur:
+        tree = {
+            "root": "inicio",
+            "nodes": [
+                {"id": "inicio", "label": "Boas-vindas", "text": "Olá! Sou o assistente do Libercard."},
+                {"id": "bloqueio", "label": "Bloqueio de cartão", "text": "Para bloquear, informe os 4 últimos dígitos."},
+            ],
+            "edges": [{"from": "inicio", "to": "bloqueio", "label": "Perdi meu cartão"}],
+        }
+        cur.execute(
+            """INSERT INTO knowledge_attachments (item_id, kind, title, content) VALUES
+                 (%s, 'arvore_dialogo', 'Fluxo principal', %s),
+                 (%s, 'documento', 'Runbook de incidentes', %s)""",
+            [
+                seed["bot"],
+                json.dumps(tree),
+                seed["bot"],
+                "# Runbook\n\n" + ("Quando o webhook do gateway Zenvia cair, reinicie o conector. " * 60),
+            ],
+        )
+    chunks = rag.collect_chunks()
+    anexos = [c for c in chunks if c["source_type"] == "anexo"]
+    arvore = next(c for c in anexos if "Fluxo principal" in c["title"])
+    assert 'Opção "Perdi meu cartão" leva a "Bloqueio de cartão"' in arvore["content"]
+    assert arvore["path"].startswith(f"/catalogo/{seed['bot']}?anexo=")
+    runbook = [c for c in anexos if "Runbook" in c["title"]]
+    assert len(runbook) > 1 and runbook[1]["title"].endswith("(parte 2)")
+    assert len({c["source_id"] for c in anexos}) == len(anexos)  # ids únicos por parte
+    item = next(c for c in chunks if c["source_type"] == "catalogo" and c["source_id"] == seed["bot"])
+    assert "Material anexado: Fluxo principal; Runbook de incidentes" in item["content"]
+
+    rag.sync_index(full=True)
+    hits = rag.search("como bloquear o cartão perdido no chatbot", k=5)
+    assert hits and hits[0]["source_type"] == "anexo" and "Fluxo principal" in hits[0]["title"]
+    hits = rag.search("webhook Zenvia caiu", k=5)
+    assert hits and "Runbook" in hits[0]["title"]

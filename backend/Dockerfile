@@ -16,6 +16,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY migrations ./migrations
+# Pasta dos arquivos anexados ao catálogo (no compose, um volume montado aqui). Criada com o
+# dono certo para o volume herdar a permissão de escrita do usuário "node".
+RUN mkdir -p /app/data/uploads && chown -R node:node /app/data
 
 # Roda como usuário sem privilégios (o usuário "node" já existe na imagem oficial).
 USER node

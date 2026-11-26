@@ -234,6 +234,103 @@ export function IconChevronDown(p: IconProps) {
   );
 }
 
+/** Diagrama: blocos de arquitetura ligados, com o nó no ponto de integração. */
+export function IconDiagram(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="3.5" y="3.5" width="7" height="5.5" rx="1.5" />
+      <rect x="13.5" y="15" width="7" height="5.5" rx="1.5" />
+      <rect x="3.5" y="15" width="7" height="5.5" rx="1.5" />
+      <path d="M7 9v6M10.5 17.75h3M7 12h7.5a2.5 2.5 0 0 1 2.5 2.5v.5" />
+      <Node cx={17} cy={6.25} r={2} />
+    </Svg>
+  );
+}
+
+/** Árvore de diálogo: uma pergunta que se ramifica em respostas. */
+export function IconDialogTree(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 5.5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2.5a2 2 0 0 1-2 2H8.5L6 12v-2a2 2 0 0 1-2-2z" />
+      <path d="M9 10v3.5a2 2 0 0 0 2 2h2.5M9 13.5v3a2 2 0 0 0 2 2h2.5" />
+      <circle cx="16" cy="15.5" r="1.6" />
+      <Node cx={16} cy={18.5} r={1.6} />
+    </Svg>
+  );
+}
+
+/** Arquivo anexado. */
+export function IconPaperclip(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M19.5 11.5l-7.2 7.2a4.6 4.6 0 0 1-6.5-6.5l7.6-7.6a3.1 3.1 0 0 1 4.4 4.4l-7.5 7.5a1.6 1.6 0 0 1-2.3-2.3l6.8-6.8" />
+    </Svg>
+  );
+}
+
+export function IconLink(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M10 14a4 4 0 0 0 5.66 0l3.17-3.17a4 4 0 0 0-5.66-5.66L12 6.34" />
+      <path d="M14 10a4 4 0 0 0-5.66 0l-3.17 3.17a4 4 0 0 0 5.66 5.66L12 17.66" />
+    </Svg>
+  );
+}
+
+export function IconPlus(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}
+
+export function IconPencil(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16z" />
+      <path d="M13 7l4 4" />
+    </Svg>
+  );
+}
+
+export function IconTrash(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4.5 7h15M10 11v6M14 11v6" />
+      <path d="M6.5 7l.8 11.2A2 2 0 0 0 9.3 20h5.4a2 2 0 0 0 2-1.8L17.5 7" />
+      <path d="M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2" />
+    </Svg>
+  );
+}
+
+export function IconDownload(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5" />
+      <path d="M5 19.5h14" />
+    </Svg>
+  );
+}
+
+export function IconUpload(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 15.5V5M7.5 9.5L12 5l4.5 4.5" />
+      <path d="M5 19.5h14" />
+    </Svg>
+  );
+}
+
+export function IconExternal(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M14 4.5h5.5V10M19.5 4.5L11 13" />
+      <path d="M18 14v4a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 5 18V8a1.5 1.5 0 0 1 1.5-1.5h4" />
+    </Svg>
+  );
+}
+
 /**
  * Marca do FlexIA Hub: um "F" de traço flexível — a haste que se curva no topo — e o nó de
  * IA na ponta da barra do meio. A mesma arte está em public/favicon.svg.

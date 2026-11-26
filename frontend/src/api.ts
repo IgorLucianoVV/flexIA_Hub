@@ -16,6 +16,9 @@ import type {
   ForumCategory,
   ForumReply,
   ForumThread,
+  DialogTree,
+  KnowledgeAttachment,
+  KnowledgeAttachmentDetail,
   KnowledgeDetail,
   KnowledgeItem,
   Paginated,
@@ -90,7 +93,8 @@ async function send(path: string, options?: RequestInit): Promise<Response> {
   });
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+/** Faz a requisição autenticada (renovando a sessão se preciso) e devolve a Response crua. */
+async function requestRaw(path: string, options?: RequestInit): Promise<Response> {
   let res: Response;
   try {
     res = await send(path, options);
@@ -112,9 +116,16 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({}));
     throw new ApiError(res.status, body.error || `Erro ${res.status} ao chamar ${path}`);
   }
+  return res;
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await requestRaw(path, options);
   if (res.status === 204) return undefined as T;
   return res.json();
 }
+
+const put = <T>(path: string, body: unknown) => request<T>(path, { method: "PUT", body: JSON.stringify(body) });
 
 const post = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
@@ -167,6 +178,32 @@ export const api = {
   addKnowledgeRelation: (id: string, toId: string) => post<{ id: string }>(`/knowledge/${id}/relations`, { toId }),
   removeKnowledgeRelation: (id: string, relationId: string) => del(`/knowledge/${id}/relations/${relationId}`),
   syncGitlab: () => post<any>("/knowledge/sync/gitlab"),
+
+  // Anexos do catálogo: documentação, diagramas, árvores de diálogo, arquivos e links
+  getAttachments: (itemId: string) => request<KnowledgeAttachment[]>(`/knowledge/${itemId}/attachments`),
+  getAttachment: (itemId: string, attachmentId: string) =>
+    request<KnowledgeAttachmentDetail>(`/knowledge/${itemId}/attachments/${attachmentId}`),
+  createAttachment: (itemId: string, data: { kind: string; title: string; content?: string; url?: string }) =>
+    post<KnowledgeAttachment & { warnings: string[] }>(`/knowledge/${itemId}/attachments`, data),
+  updateAttachment: (itemId: string, attachmentId: string, data: { title?: string; content?: string; url?: string }) =>
+    patch<KnowledgeAttachment & { warnings: string[] }>(`/knowledge/${itemId}/attachments/${attachmentId}`, data),
+  deleteAttachment: (itemId: string, attachmentId: string) => del(`/knowledge/${itemId}/attachments/${attachmentId}`),
+  reorderAttachments: (itemId: string, ids: string[]) => put<void>(`/knowledge/${itemId}/attachments/order`, { ids }),
+  uploadAttachment: (itemId: string, file: File, title?: string) =>
+    request<KnowledgeAttachment>(`/knowledge/${itemId}/attachments/file`, {
+      method: "POST",
+      body: file,
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "X-File-Name": encodeURIComponent(file.name),
+        ...(title ? { "X-Title": encodeURIComponent(title) } : {}),
+      },
+    }),
+  /** Baixa o arquivo com o token da sessão (um <img src> ou link direto não levaria o token). */
+  getAttachmentFile: async (itemId: string, attachmentId: string) =>
+    (await requestRaw(`/knowledge/${itemId}/attachments/${attachmentId}/file`)).blob(),
+  previewDialogTree: (content: string) =>
+    post<{ tree: DialogTree; warnings: string[]; limits: { maxNodes: number } }>("/knowledge/dialog-tree/preview", { content }),
 
   // Ativação
   getActivationProjects: (params?: { clientId?: string; status?: string; q?: string; limit?: number; offset?: number }) =>

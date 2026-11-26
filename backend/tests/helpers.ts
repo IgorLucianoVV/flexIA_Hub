@@ -14,7 +14,7 @@ export async function resetDb() {
       password_resets, forum_replies, forum_threads, forum_categories,
       client_health_history, client_metrics, client_alerts, client_documents, clickup_task_cache,
       client_clickup_mappings, activation_artifacts, activation_phases,
-      activation_projects, knowledge_relations, knowledge_items, clients, users
+      activation_projects, knowledge_attachments, knowledge_relations, knowledge_items, clients, users
     RESTART IDENTITY CASCADE
   `);
 }

@@ -89,7 +89,7 @@ async function handle(event: DomainEvent): Promise<void> {
         type: event.type,
         title: `Item do catálogo descontinuado — ${meta.name}`,
         body: `${meta.dependentsCount} item(ns) do catálogo dependem dele.`,
-        link: `/catalogo?item=${event.entityId}`,
+        link: `/catalogo/${event.entityId}`,
       });
       return;
     }

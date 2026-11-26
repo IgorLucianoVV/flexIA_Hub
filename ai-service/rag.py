@@ -2,7 +2,8 @@
 Índice de RAG (Retrieval-Augmented Generation) do Assistente de IA.
 
 O assistente recupera trechos ("chunks") de TODOS os dados da plataforma — clientes,
-catálogo de conhecimento, projetos de ativação, tópicos/respostas do fórum, documentos,
+catálogo de conhecimento (inclusive a documentação, os diagramas, as árvores de diálogo e o texto
+dos arquivos anexados a cada item), projetos de ativação, tópicos/respostas do fórum, documentos,
 alertas, métricas e tasks do ClickUp — e responde com base neles.
 
 ### Busca híbrida (vetor + palavra-chave, fundidos por RRF)
@@ -43,6 +44,7 @@ só `_fit`/`_transform` mudariam — o schema, a busca híbrida e o grafo não m
 """
 import hashlib
 import io
+import json
 import logging
 import re
 import threading
@@ -138,6 +140,101 @@ def _chunk(source_type: str, source_id: str, title: str, path: str, content: str
     }
 
 
+# Anexos longos (documentação, PDFs) viram vários chunks: um chunk só com um documento inteiro
+# diluiria o assunto e a busca não acharia o trecho certo.
+ATTACHMENT_CHUNK_CHARS = 1200
+ATTACHMENT_CHUNK_OVERLAP = 150
+ATTACHMENT_MAX_CHUNKS = 60  # ~70 mil caracteres por anexo; o resto continua acessível na tela
+
+ATTACHMENT_KIND_LABELS = {
+    "documento": "documentação",
+    "diagrama": "diagrama",
+    "arvore_dialogo": "árvore de diálogo",
+    "arquivo": "arquivo",
+    "link": "link",
+}
+
+
+def split_text(text: str, size: int = ATTACHMENT_CHUNK_CHARS, overlap: int = ATTACHMENT_CHUNK_OVERLAP) -> List[str]:
+    """Divide um texto em janelas de ~`size` caracteres, cortando de preferência em parágrafo,
+    depois em fim de frase, com uma pequena sobreposição para não partir uma ideia ao meio."""
+    text = text.strip()
+    if len(text) <= size:
+        return [text] if text else []
+    parts: List[str] = []
+    start = 0
+    while start < len(text) and len(parts) < ATTACHMENT_MAX_CHUNKS:
+        end = min(start + size, len(text))
+        if end < len(text):
+            window = text[start:end]
+            cut = max(window.rfind("\n\n"), window.rfind("\n#"))
+            if cut < size * 0.5:
+                cut = max(window.rfind(". "), window.rfind("\n"))
+            if cut >= size * 0.5:
+                end = start + cut + 1
+        parts.append(text[start:end].strip())
+        if end >= len(text):
+            break
+        start = max(end - overlap, start + 1)
+    return [p for p in parts if p]
+
+
+def dialog_tree_to_text(raw: Any) -> str:
+    """Texto corrido de uma árvore de diálogo normalizada ({root, nodes, edges}) — o mesmo
+    formato que o backend grava (backend/src/modules/knowledge/dialogTree.ts)."""
+    try:
+        tree = json.loads(raw) if isinstance(raw, str) else raw
+        nodes = tree.get("nodes") or []
+        edges = tree.get("edges") or []
+    except (ValueError, AttributeError):
+        return _clean(raw)
+    labels = {n.get("id"): n.get("label") or n.get("id") for n in nodes}
+    exits: Dict[str, List[Dict[str, Any]]] = {}
+    for e in edges:
+        exits.setdefault(e.get("from"), []).append(e)
+    lines: List[str] = []
+    for n in nodes:
+        line = f'Nó "{n.get("label") or n.get("id")}"'
+        if n.get("text"):
+            line += f": {n['text']}"
+        lines.append(line + ".")
+        for e in exits.get(n.get("id"), []):
+            target = labels.get(e.get("to"), e.get("to"))
+            if e.get("label"):
+                lines.append(f'  Opção "{e["label"]}" leva a "{target}".')
+            else:
+                lines.append(f'  Segue para "{target}".')
+    return "\n".join(lines)
+
+
+def attachment_chunks(r: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Chunks de um anexo do catálogo. Cada parte cita o item e o anexo, e o link abre o anexo."""
+    kind = r["kind"]
+    if kind == "arvore_dialogo":
+        body = dialog_tree_to_text(r["content"])
+    elif kind == "arquivo":
+        body = _clean(r["extracted_text"]) or f"Arquivo {r['file_name']} (sem texto extraível)."
+    elif kind == "link":
+        body = f"Link externo: {r['url']}. {_clean(r['content'])}"
+    elif kind == "diagrama":
+        body = f"Diagrama Mermaid:\n{_clean(r['content'])}"
+    else:
+        body = _clean(r["content"])
+
+    header = (
+        f"Anexo ({ATTACHMENT_KIND_LABELS.get(kind, kind)}) do item do catálogo '{r['item_name']}' "
+        f"({r['item_type']}): '{r['title']}'."
+    )
+    path = f"/catalogo/{r['item_id']}?anexo={r['id']}"
+    parts = split_text(body) or [""]
+    chunks = []
+    for i, part in enumerate(parts):
+        title = f"{r['item_name']} · {r['title']}" + (f" (parte {i + 1})" if len(parts) > 1 else "")
+        source_id = r["id"] if i == 0 else f"{r['id']}#{i + 1}"
+        chunks.append(_chunk("anexo", source_id, title, path, f"{header} {part}"))
+    return chunks
+
+
 def _describe_health(breakdown: Optional[Dict[str, Any]]) -> str:
     """Transforma a composição do health score em texto, para o assistente conseguir
     explicar POR QUE um cliente está com o score que está."""
@@ -184,7 +281,9 @@ def collect_chunks() -> List[Dict[str, str]]:
                     WHERE r.from_id = k.id) AS depends_on,
                   (SELECT string_agg(d.name, ', ' ORDER BY d.name)
                      FROM knowledge_relations r JOIN knowledge_items d ON d.id = r.from_id
-                    WHERE r.to_id = k.id) AS dependents
+                    WHERE r.to_id = k.id) AS dependents,
+                  (SELECT string_agg(a.title, '; ' ORDER BY a.position, a.created_at)
+                     FROM knowledge_attachments a WHERE a.item_id = k.id) AS attachments
              FROM knowledge_items k
              LEFT JOIN clients c ON c.id = k.client_id
              LEFT JOIN knowledge_items rb ON rb.id = k.replaced_by_id"""
@@ -199,11 +298,21 @@ def collect_chunks() -> List[Dict[str, str]]:
             content += f" Depende de: {r['depends_on']}."
         if r["dependents"]:
             content += f" Usado por (dependentes): {r['dependents']}."
+        if r["attachments"]:
+            content += f" Material anexado: {r['attachments']}."
         if r["status"] == "deprecado":
             content += f" Item descontinuado. {_clean(r['deprecation_note'])}"
             if r["replaced_by_name"]:
                 content += f" Substituído por: {r['replaced_by_name']}."
-        chunks.append(_chunk("catalogo", r["id"], r["name"], f"/catalogo?item={r['id']}", content))
+        chunks.append(_chunk("catalogo", r["id"], r["name"], f"/catalogo/{r['id']}", content))
+
+    for r in db.fetch_all(
+        """SELECT a.id, a.item_id, a.kind, a.title, a.content, a.url, a.file_name, a.extracted_text,
+                  k.name AS item_name, k.type AS item_type
+             FROM knowledge_attachments a JOIN knowledge_items k ON k.id = a.item_id
+            ORDER BY a.item_id, a.position, a.created_at"""
+    ):
+        chunks.extend(attachment_chunks(r))
 
     open_artifacts: Dict[str, List[str]] = {}
     for a in db.fetch_all(
